@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Miniature • Сообщения</title>
+    <link rel="stylesheet" href="/styles/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Миниатюра продашкена</h1>
+            <span class="subtitle">FastAPI + Postgres + Redis + Nginx</span>
+        </header>
+        <main class="main-grid">
+            <!-- Левая панель: отправка -->
+            <section class="panel panel-send">
+                <h2>Новое сообщение</h2>
+                <form id="message-form">
+                    <textarea id="message-text"
+                              placeholder="Введи текст сообщения..."
+                              maxlength="200"
+                              rows="4"
+                              required></textarea>
+                    <div class="char-count">
+                        <span id="char-count">0</span>/200
+                    </div>
+                    <button type="submit" id="send-btn">
+                        <span class="btn-text">Отправить</span>
+                        <span class="btn-loader" style="display:none;">⏳</span>
+                    </button>
+                </form>
+                <button id="refresh-btn" class="secondary-btn">
+                    Обновить список
+                </button>
+                <div id="send-status" class="status-message"></div>
+            </section>
+
+            <!-- Правая панель: список -->
+            <section class="panel panel-list">
+                <h2>Сообщения</h2>
+                <div id="messages-container" class="messages-list">
+                    <div class="loading">Загрузка...</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/scripts/api.js"></script>
+    <script src="/scripts/main.js"></script>
+</body>
+</html>
