@@ -9,14 +9,14 @@
   const messagesContainer = document.getElementById('messages-container');
   const sendStatus = document.getElementById('send-status');
 
-  // Обновление счётчика символов
+  let editingMessageId = null; // ID сообщения, которое редактируем
+
   textarea.addEventListener('input', () => {
     const len = textarea.value.length;
     charCount.textContent = len;
     charCount.style.color = len > 200 ? 'var(--error)' : '';
   });
 
-  // Рендер сообщений
   function renderMessages(messages) {
     if (!messages || messages.length === 0) {
       messagesContainer.innerHTML = '<div class="empty">Нет сообщений. Будь первым!</div>';
@@ -28,16 +28,32 @@
       const time = new Date(msg.created_at).toLocaleString('ru-RU');
       const shortId = msg.message_id.substring(0, 8) + '...';
       return `
-                <div class="message-card">
+                <div class="message-card" data-id="${msg.message_id}">
                     <div class="message-text">${escapeHtml(msg.message)}</div>
                     <div class="message-meta">
                         <span class="message-id" title="${msg.message_id}">${shortId}</span>
                         <span class="message-time">${time}</span>
+                        <div class="message-actions">
+                            <button class="action-btn edit-btn" data-id="${msg.message_id}" data-text="${escapeHtml(msg.message)}" title="Редактировать">
+                                ✏️
+                            </button>
+                            <button class="action-btn delete-btn" data-id="${msg.message_id}" title="Удалить">
+                                🗑️
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
     }).join('');
     messagesContainer.innerHTML = html;
+
+    // Навешиваем обработчики на кнопки
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', () => deleteMessage(btn.dataset.id));
+    });
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+      btn.addEventListener('click', () => startEdit(btn.dataset.id, btn.dataset.text));
+    });
   }
 
   function escapeHtml(text) {
@@ -51,7 +67,6 @@
     return text.replace(/[&<>"']/g, m => map[m]);
   }
 
-  // Загрузка сообщений
   async function loadMessages() {
     try {
       messagesContainer.innerHTML = '<div class="loading">Загрузка...</div>';
@@ -64,7 +79,39 @@
     }
   }
 
-  // Отправка формы
+  async function deleteMessage(id) {
+    if (!confirm('Удалить это сообщение?')) return;
+    try {
+      await apiClient.delete(`/messages/${id}`);
+      sendStatus.textContent = 'Сообщение удалено';
+      sendStatus.className = 'status-message success';
+      await loadMessages();
+    } catch (error) {
+      sendStatus.textContent = `Ошибка удаления: ${error.message}`;
+      sendStatus.className = 'status-message error';
+    }
+  }
+
+  function startEdit(id, text) {
+    editingMessageId = id;
+    textarea.value = text;
+    textarea.focus();
+    charCount.textContent = text.length;
+    btnText.textContent = 'Сохранить';
+    sendBtn.style.background = 'var(--primary)'; // фиолетовый
+    sendStatus.textContent = `Редактирование сообщения...`;
+    sendStatus.className = 'status-message';
+  }
+
+  function cancelEdit() {
+    editingMessageId = null;
+    textarea.value = '';
+    charCount.textContent = '0';
+    btnText.textContent = 'Отправить';
+    sendBtn.style.background = '';
+    sendStatus.textContent = '';
+  }
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const text = textarea.value.trim();
@@ -79,11 +126,17 @@
     btnLoader.style.display = 'inline';
 
     try {
-      const result = await apiClient.post('/messages', { message: text });
-      sendStatus.textContent = result.message || 'Отправлено!';
+      if (editingMessageId) {
+        // Режим редактирования
+        await apiClient.patch(`/messages/${editingMessageId}`, { message: text });
+        sendStatus.textContent = 'Сообщение обновлено!';
+      } else {
+        // Режим создания
+        await apiClient.post('/messages', { message: text });
+        sendStatus.textContent = 'Сообщение отправлено!';
+      }
       sendStatus.className = 'status-message success';
-      textarea.value = '';
-      charCount.textContent = '0';
+      cancelEdit();
       await loadMessages();
     } catch (error) {
       sendStatus.textContent = `Ошибка: ${error.message}`;
@@ -95,9 +148,10 @@
     }
   });
 
-  // Ручное обновление
-  refreshBtn.addEventListener('click', loadMessages);
+  refreshBtn.addEventListener('click', () => {
+    cancelEdit();
+    loadMessages();
+  });
 
-  // Первоначальная загрузка
   loadMessages();
 });

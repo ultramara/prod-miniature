@@ -261,3 +261,36 @@ button {
 .btn-loader {
     display: inline-block;
 }
+
+.message-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.3rem 0.6rem;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: var(--transition);
+}
+
+.edit-btn {
+    color: var(--primary);
+}
+
+    .edit-btn:hover {
+        background: rgba(108, 99, 255, 0.15);
+        border-color: var(--primary);
+    }
+
+.delete-btn {
+    color: var(--error);
+}
+
+    .delete-btn:hover {
+        background: rgba(244, 67, 54, 0.15);
+        border-color: var(--error);
+    }

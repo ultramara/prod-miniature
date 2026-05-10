@@ -9,6 +9,10 @@ class MessageCreate(BaseModel):
                          description="Текст сообщения")
 
 
+class MessageUpdate(MessageCreate):
+    pass
+
+
 class MessageOut(BaseModel):
     message_id: str
     message: str
